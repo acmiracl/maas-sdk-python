@@ -10,5 +10,6 @@ setup(name='miracl_api',
       packages=['miracl_api'],
       install_requires=[
           'flask', 'oic',
+          'future'  # https://github.com/rohe/pyoidc/issues/188
       ],
       zip_safe=False)
