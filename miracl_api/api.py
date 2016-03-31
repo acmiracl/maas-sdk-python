@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import json
 
 from oic import rndstr
@@ -8,8 +6,11 @@ from oic.oic.message import RegistrationResponse, AuthorizationResponse, \
     AccessTokenResponse
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from oic.oauth2 import SUCCESSFUL
+import logging
 
 _issuer = "https://m-pin.my.id/c2id"
+
+_logger = logging.getLogger(__name__)
 
 
 class MiraclClient(object):
@@ -20,7 +21,7 @@ class MiraclClient(object):
 
         self.provider_info = client.provider_config(issuer=_issuer)
 
-        print(self.provider_info)
+        _logger.info("Received provider info: %s", self.provider_info)
 
         self.info = {"client_id": client_id,
                      "client_secret": client_secret,
@@ -45,6 +46,7 @@ class MiraclClient(object):
         """ Returns redirect URL for authorization via M-Pin system
             :arg session mutable dictionary that contains session variables
         """
+
         client = self._create_client(session)
 
         if "miracl_state" not in session:
@@ -61,10 +63,14 @@ class MiraclClient(object):
             "state": session["miracl_state"]
         }
 
-        auth_req = client.construct_AuthorizationRequest(request_args=args)
-        print(auth_req)
+        _logger.debug("authorization_request: %s", args)
 
-        return auth_req.request(client.authorization_endpoint)
+        auth_req = client.construct_AuthorizationRequest(request_args=args)
+        request = auth_req.request(client.authorization_endpoint)
+
+        _logger.debug("authorization_request url: %s", request)
+
+        return request
 
     def request_access_token(self, session, query_string):
         """Returns code that can be used to request access token"""
@@ -82,6 +88,7 @@ class MiraclClient(object):
             "client_secret": client.client_secret
         }
 
+        _logger.debug("request_access_token: %s", args)
         resp = client.do_access_token_request(
             scope=['openid', 'email', 'user_id', 'name'],
             state=session["miracl_state"],
@@ -89,18 +96,20 @@ class MiraclClient(object):
             authn_method="client_secret_basic"
         )
 
+        _logger.debug("authorization_request response: %s", resp.to_dict())
+
         session["miracl_token"] = resp.to_dict()
 
         return resp.to_dict()["access_token"] or None
 
-    def check_token(self, session):
+    def _request_user_info(self, session):
         if "miracl_token" not in session:
-            return False
+            return None
 
         client = self._create_client(session)
 
         if "access_token" not in client.registration_access_token:
-            return False
+            return None
 
         # noinspection PyUnresolvedReferences
         request = client.construct_UserInfoRequest(
@@ -112,35 +121,21 @@ class MiraclClient(object):
             }
         ).request(client.userinfo_endpoint)
 
+        _logger.debug("user_info request: %s", request)
         response = client.http_request(url=request, method='GET')
+        _logger.debug("user_info response: %s %s", response, response.text)
 
-        if response.status_code in SUCCESSFUL:
+        return response
+
+    def check_token(self, session):
+        response = self._request_user_info(session)
+        if response is not None and response.status_code in SUCCESSFUL:
             return True
 
         return False
 
     def get_email(self, session):
-        if "miracl_token" not in session:
-            return None
-
-        client = self._create_client(session)
-
-        if "access_token" not in client.registration_access_token:
-            return None
-
-        # noinspection PyUnresolvedReferences
-        request = client.construct_UserInfoRequest(
-            request_args={
-                "access_token": client.registration_access_token[
-                    "access_token"],
-                "client_id": client.client_id,
-                "client_secret": client.client_secret
-            }
-        ).request(client.userinfo_endpoint)
-
-        response = client.http_request(url=request, method='GET')
-
-        if response.status_code in SUCCESSFUL:
+        response = self._request_user_info(session)
+        if response is not None and response.status_code in SUCCESSFUL:
             return json.loads(response.text)["sub"]
-
         return None
