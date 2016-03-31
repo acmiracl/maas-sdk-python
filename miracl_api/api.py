@@ -99,11 +99,14 @@ class MiraclClient(object):
             authn_method="client_secret_basic"
         )
 
-        _logger.debug("authorization_request response: %s", resp.to_dict())
+        resp_dict = resp.to_dict()
+        _logger.debug("authorization_request response: %s", resp_dict)
 
-        session["miracl_token"] = resp.to_dict()
-
-        return resp.to_dict()["access_token"] or None
+        if "access_token" in resp_dict:
+            session["miracl_token"] = resp_dict
+            return resp_dict["access_token"]
+        else:
+            return None
 
     def _request_user_info(self, session):
         if "miracl_token" not in session:
@@ -140,14 +143,19 @@ class MiraclClient(object):
     def get_email(self, session):
         response = self._request_user_info(session)
         if response is not None and response.status_code in SUCCESSFUL:
-            return json.loads(response.text)["sub"]
+            resp_json = json.loads(response.text)
+            if "sub" not in resp_json:
+                return None
+            return resp_json["sub"]
         return None
 
     def get_user_id(self, session):
         response = self._request_user_info(session)
         if response is not None and response.status_code in SUCCESSFUL:
-            return json.loads(response.text)["sub"]
-
+            resp_json = json.loads(response.text)
+            if "sub" not in resp_json:
+                return None
+            return resp_json["sub"]
         return None
 
 
