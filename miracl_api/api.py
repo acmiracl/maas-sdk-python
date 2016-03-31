@@ -141,3 +141,10 @@ class MiraclClient(object):
         if response is not None and response.status_code in SUCCESSFUL:
             return json.loads(response.text)["sub"]
         return None
+
+    def get_user_id(self, session):
+        response = self._request_user_info(session)
+        if response is not None and response.status_code in SUCCESSFUL:
+            return json.loads(response.text)["sub"]
+
+        return None
