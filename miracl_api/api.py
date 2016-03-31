@@ -81,7 +81,8 @@ class MiraclClient(object):
         response = client.parse_response(AuthorizationResponse,
                                          info=query_string,
                                          sformat="urlencoded")
-        assert response["state"] == session["miracl_state"]
+        if response["state"] != session["miracl_state"]:
+            raise MiraclException("Session state differs from response state")
 
         args = {
             "code": response["code"],
@@ -148,3 +149,13 @@ class MiraclClient(object):
             return json.loads(response.text)["sub"]
 
         return None
+
+
+class MiraclException(Exception):
+    def __init__(self, message, exception=None):
+        if exception is None:
+            Exception.__init__(self, message)
+        else:
+            Exception.__init__(
+                self,
+                "{0}, original exception: {1}".format(message, exception))
