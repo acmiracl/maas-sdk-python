@@ -14,6 +14,10 @@ _issuer = "https://m-pin.my.id/c2id"
 
 _logger = logging.getLogger(__name__)
 
+SESSION_MIRACL_TOKEN_KEY = "miracl_token"
+SESSION_MIRACL_NONCE_KEY = "miracl_nonce"
+SESSION_MIRACL_STATE_KEY = "miracl_state"
+
 
 class MiraclClient(object):
     def __init__(self, client_id, client_secret, redirect_uri):
@@ -36,9 +40,9 @@ class MiraclClient(object):
         client_reg = RegistrationResponse(**self.info)
         client.store_registration_info(client_reg)
 
-        if "miracl_token" in session:
+        if SESSION_MIRACL_TOKEN_KEY in session:
             access_token = AccessTokenResponse().from_dict(
-                session["miracl_token"])
+                session[SESSION_MIRACL_TOKEN_KEY])
 
             client.registration_access_token = access_token
 
@@ -51,18 +55,18 @@ class MiraclClient(object):
 
         client = self._create_client(session)
 
-        if "miracl_state" not in session:
-            session["miracl_state"] = rndstr()
-        if "miracl_nonce" not in session:
-            session["miracl_nonce"] = rndstr()
+        if SESSION_MIRACL_STATE_KEY not in session:
+            session[SESSION_MIRACL_STATE_KEY] = rndstr()
+        if SESSION_MIRACL_NONCE_KEY not in session:
+            session[SESSION_MIRACL_NONCE_KEY] = rndstr()
 
         args = {
             "client_id": client.client_id,
             "response_type": "code",
             "scope": ['openid', 'email', 'user_id', 'name'],
-            "nonce": session["miracl_nonce"],
+            "nonce": session[SESSION_MIRACL_NONCE_KEY],
             "redirect_uri": client.registration_response["redirect_uris"][0],
-            "state": session["miracl_state"]
+            "state": session[SESSION_MIRACL_STATE_KEY]
         }
 
         _logger.debug("authorization_request: %s", args)
@@ -81,7 +85,7 @@ class MiraclClient(object):
         response = client.parse_response(AuthorizationResponse,
                                          info=query_string,
                                          sformat="urlencoded")
-        if response["state"] != session["miracl_state"]:
+        if response["state"] != session[SESSION_MIRACL_STATE_KEY]:
             raise MiraclException("Session state differs from response state")
 
         args = {
@@ -94,7 +98,7 @@ class MiraclClient(object):
         _logger.debug("request_access_token: %s", args)
         resp = client.do_access_token_request(
             scope=['openid', 'email', 'user_id', 'name'],
-            state=session["miracl_state"],
+            state=session[SESSION_MIRACL_STATE_KEY],
             request_args=args,
             authn_method="client_secret_basic"
         )
@@ -103,13 +107,13 @@ class MiraclClient(object):
         _logger.debug("authorization_request response: %s", resp_dict)
 
         if "access_token" in resp_dict:
-            session["miracl_token"] = resp_dict
+            session[SESSION_MIRACL_TOKEN_KEY] = resp_dict
             return resp_dict["access_token"]
         else:
             return None
 
     def _request_user_info(self, session):
-        if "miracl_token" not in session:
+        if SESSION_MIRACL_TOKEN_KEY not in session:
             return None
 
         client = self._create_client(session)
