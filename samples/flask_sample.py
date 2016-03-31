@@ -3,6 +3,12 @@ from __future__ import print_function
 from flask import Flask, redirect, session, request
 from miracl_api import MiraclClient
 
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s: %(message)s')
+
 app = Flask(__name__)
 
 m_pin = MiraclClient(
