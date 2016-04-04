@@ -6,7 +6,7 @@ Some dependencies require additional system packages to be installed.
 For Ubuntu 14.04 dependencies are:
 
 * `build-essential` (for compiling code in dependencies)
-* `python-dev`
+* `python-dev` or `python3-dev` (depending on python version used)
 * `libssl-dev`
 * `libffi-dev`
 * `python-setuptools`
