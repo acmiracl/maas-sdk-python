@@ -5,26 +5,24 @@ from mock import patch
 from oic.oauth2.message import Message
 
 
+def _generate_ok_response(data=None):
+    if data is None:
+        data = {}
+    return Message().from_dict(data)
+
+
+def _generate_err_response(error, message=""):
+    return Message().from_dict({
+        "error": error,
+        "error_message": message
+    })
+
+
 class TestBasics(unittest.TestCase):
-    def setUp(self):
-        self.api = miracl_api.MiraclClient("MOCK_CLIENT", "MOCK_SECRET",
-                                           "http://nothing")
-
-    def tearDown(self):
-        pass
-
-    @staticmethod
-    def _generate_ok_response(data=None):
-        if data is None:
-            data = {}
-        return Message().from_dict(data)
-
-    @staticmethod
-    def _generate_err_response(error, message=""):
-        return Message().from_dict({
-            "error": error,
-            "error_message": message
-        })
+    @classmethod
+    def setUpClass(cls):
+        cls.api = miracl_api.MiraclClient("MOCK_CLIENT", "MOCK_SECRET",
+                                          "http://nothing")
 
     def test_auth_request_url(self):
         session = {}
@@ -34,7 +32,7 @@ class TestBasics(unittest.TestCase):
         self.assertTrue(miracl_api.SESSION_MIRACL_NONCE_KEY in session)
 
     def test_request_token_good(self):
-        response = self._generate_ok_response({"access_token": "MOCK_TOKEN"})
+        response = _generate_ok_response({"access_token": "MOCK_TOKEN"})
 
         with patch("oic.oic.Client.do_access_token_request") as mock:
             mock.return_value = response
@@ -44,3 +42,33 @@ class TestBasics(unittest.TestCase):
                 session[miracl_api.SESSION_MIRACL_STATE_KEY])
             token = self.api.request_access_token(session, query_string)
             self.assertEqual("MOCK_TOKEN", token)
+
+
+class TestExpectedFailures(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.api = miracl_api.MiraclClient("MOCK_CLIENT", "MOCK_SECRET",
+                                          "http://nothing")
+
+    def test_request_token_empty_url(self):
+        session = {}
+        self.api.authorization_request(session)
+        self.assertIsNone(self.api.request_access_token(session, ""))
+
+    def test_request_token_garbage_url(self):
+        session = {}
+        self.api.authorization_request(session)
+        self.assertRaises(miracl_api.MiraclError,
+                          self.api.request_access_token, session, "garbage")
+
+    def test_request_token_server_error(self):
+        response = _generate_ok_response({"error": "MOCK_ERROR"})
+
+        with patch("oic.oic.Client.do_access_token_request") as mock:
+            mock.return_value = response
+            session = {}
+            self.api.authorization_request(session)
+            query_string = "code=MOCK_CODE&state={0}".format(
+                session[miracl_api.SESSION_MIRACL_STATE_KEY])
+            token = self.api.request_access_token(session, query_string)
+            self.assertIsNone(token)
