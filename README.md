@@ -19,6 +19,10 @@ For Ubuntu 14.04 dependencies are:
 
 `python setup.py develop` will install package using symlink to source code.
 
+## Tests
+
+To run tests, use `python setup.py test`.
+
 # Samples
 
 Replace `CLIENT_ID`, `CLIENT_SECRET` and `REDIRECT_URI` with valid data from
