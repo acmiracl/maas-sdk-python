@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import json
 
 from oic import rndstr
-from oic.oic import Client
+from oic.oic import Client, PyoidcError
 from oic.oic.message import RegistrationResponse, AuthorizationResponse, \
     AccessTokenResponse
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
@@ -79,32 +79,44 @@ class MiraclClient(object):
         return request
 
     def request_access_token(self, session, query_string):
-        """Returns code that can be used to request access token"""
+        """Returns code that can be used to request access token or None if
+        query string doesn't contain code and state.
+        """
+        if query_string is None or query_string == "":
+            # Redirect without parameters means authorization was denied
+            return None
+
         client = self._create_client(session)
 
-        response = client.parse_response(AuthorizationResponse,
-                                         info=query_string,
-                                         sformat="urlencoded")
+        try:
+            response = client.parse_response(AuthorizationResponse,
+                                             info=query_string,
+                                             sformat="urlencoded")
+        except PyoidcError as e:
+            raise MiraclError("Query string parse failed", e).log_exception()
+
         if response["state"] != session[SESSION_MIRACL_STATE_KEY]:
-            raise MiraclException("Session state differs from response state")
+            raise MiraclError("Session state differs from response state")
 
         args = {
-            "code": response["code"],
             "redirect_uri": client.registration_response["redirect_uris"][0],
             "client_id": client.client_id,
             "client_secret": client.client_secret
         }
 
         _logger.debug("request_access_token: %s", args)
-        resp = client.do_access_token_request(
-            scope=['openid', 'email', 'user_id', 'name'],
-            state=session[SESSION_MIRACL_STATE_KEY],
-            request_args=args,
-            authn_method="client_secret_basic"
-        )
+        try:
+            resp = client.do_access_token_request(
+                scope=['openid', 'email', 'user_id', 'name'],
+                state=session[SESSION_MIRACL_STATE_KEY],
+                request_args=args,
+                authn_method="client_secret_basic"
+            )
+        except PyoidcError as e:
+            raise MiraclError("Access token request failed", e).log_exception()
 
         resp_dict = resp.to_dict()
-        _logger.debug("authorization_request response: %s", resp_dict)
+        _logger.debug("request_access_token response: %s", resp_dict)
 
         if "access_token" in resp_dict:
             session[SESSION_MIRACL_TOKEN_KEY] = resp_dict
@@ -132,7 +144,11 @@ class MiraclClient(object):
         ).request(client.userinfo_endpoint)
 
         _logger.debug("user_info request: %s", request)
-        response = client.http_request(url=request, method='GET')
+        try:
+            response = client.http_request(url=request, method='GET')
+        except PyoidcError as e:
+            raise MiraclError("User info request failed", e).log_exception()
+
         _logger.debug("user_info response: %s %s", response, response.text)
 
         return response
@@ -163,7 +179,7 @@ class MiraclClient(object):
         return None
 
 
-class MiraclException(Exception):
+class MiraclError(Exception):
     def __init__(self, message, exception=None):
         if exception is None:
             Exception.__init__(self, message)
@@ -171,3 +187,7 @@ class MiraclException(Exception):
             Exception.__init__(
                 self,
                 "{0}, original exception: {1}".format(message, exception))
+
+    def log_exception(self):
+        _logger.error("Exception logged: {0}".format(self.message))
+        return self
