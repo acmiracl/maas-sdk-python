@@ -72,3 +72,22 @@ class TestExpectedFailures(unittest.TestCase):
                 session[miracl_api.SESSION_MIRACL_STATE_KEY])
             token = self.api.request_access_token(session, query_string)
             self.assertIsNone(token)
+
+
+class TestUnexpectedFalures(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.api = miracl_api.MiraclClient("MOCK_CLIENT", "MOCK_SECRET",
+                                          "http://nothing")
+
+    def test_request_token_wrong_state(self):
+        response = _generate_ok_response({"access_token": "MOCK_TOKEN"})
+
+        with patch("oic.oic.Client.do_access_token_request") as mock:
+            mock.return_value = response
+            session = {}
+            self.api.authorization_request(session)
+            query_string = "code=MOCK_CODE&state={0}".format("wrong_state")
+            self.assertRaises(miracl_api.MiraclError,
+                              self.api.request_access_token,
+                              session, query_string)
