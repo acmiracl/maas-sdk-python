@@ -36,6 +36,11 @@ class MiraclClient(object):
                      }
 
     def _create_client(self, session):
+        if SESSION_MIRACL_STATE_KEY not in session:
+            session[SESSION_MIRACL_STATE_KEY] = rndstr()
+        if SESSION_MIRACL_NONCE_KEY not in session:
+            session[SESSION_MIRACL_NONCE_KEY] = rndstr()
+
         client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
         client.handle_provider_config(self.provider_info, issuer=_issuer)
         client_reg = RegistrationResponse(**self.info)
@@ -46,6 +51,7 @@ class MiraclClient(object):
                 session[SESSION_MIRACL_TOKEN_KEY])
 
             client.registration_access_token = access_token
+
 
         return client
 
@@ -58,11 +64,6 @@ class MiraclClient(object):
         """
 
         client = self._create_client(session)
-
-        if SESSION_MIRACL_STATE_KEY not in session:
-            session[SESSION_MIRACL_STATE_KEY] = rndstr()
-        if SESSION_MIRACL_NONCE_KEY not in session:
-            session[SESSION_MIRACL_NONCE_KEY] = rndstr()
 
         args = {
             "client_id": client.client_id,
@@ -102,8 +103,9 @@ class MiraclClient(object):
         except PyoidcError as e:
             raise MiraclError("Query string parse failed", e).log_exception()
 
-        if response["state"] != session[SESSION_MIRACL_STATE_KEY]:
-            raise MiraclError("Session state differs from response state")
+        if "state" in response:
+            if response["state"] != session[SESSION_MIRACL_STATE_KEY]:
+                raise MiraclError("Session state differs from response state")
 
         args = {
             "redirect_uri": client.registration_response["redirect_uris"][0],

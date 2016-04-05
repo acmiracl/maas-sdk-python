@@ -43,6 +43,16 @@ class TestBasics(unittest.TestCase):
             token = self.api.validate_authorization(session, query_string)
             self.assertEqual("MOCK_TOKEN", token)
 
+    def test_request_token_no_state(self):
+        response = _generate_ok_response({"access_token": "MOCK_TOKEN"})
+
+        with patch("oic.oic.Client.do_access_token_request") as mock:
+            mock.return_value = response
+            session = {}
+            query_string = "code=MOCK_CODE&state="
+            token = self.api.validate_authorization(session, query_string)
+            self.assertEqual("MOCK_TOKEN", token)
+
 
 class TestExpectedFailures(unittest.TestCase):
     @classmethod
