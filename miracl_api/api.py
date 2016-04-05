@@ -50,8 +50,11 @@ class MiraclClient(object):
         return client
 
     def get_authorization_request_url(self, session):
-        """ Returns redirect URL for authorization via M-Pin system
-            :arg session mutable dictionary that contains session variables
+        """
+        Returns redirect URL for authorization via M-Pin system. After URL
+        redirects back, pass query_string to validate_authorization to complete
+        authorization with server.
+        :arg session mutable dictionary that contains session variables
         """
 
         client = self._create_client(session)
@@ -80,8 +83,11 @@ class MiraclClient(object):
         return request
 
     def validate_authorization(self, session, query_string):
-        """Returns code that can be used to request access token or None if
-        query string doesn't contain code and state.
+        """
+        Returns access token if validation succeeds or None if query string
+        doesn't contain code and state.
+        :arg session mutable dictionary that contains session variables
+        :arg query_string query string returned from authorization URL.
         """
         if query_string is None or query_string == "":
             # Redirect without parameters means authorization was denied
@@ -127,6 +133,11 @@ class MiraclClient(object):
 
     @staticmethod
     def clear_user_info(session, including_auth=False):
+        """
+        Clears session from user info
+        :arg session mutable dictionary that contains session variables
+        :arg including_auth clear also authentication data
+        """
         keys = [SESSION_MIRACL_USERINFO_KEY]
         if including_auth:
             keys += [SESSION_MIRACL_NONCE_KEY,
@@ -178,12 +189,23 @@ class MiraclClient(object):
         return text
 
     def is_authorized(self, session):
+        """
+        Returns True if access token is in session
+        :arg session mutable dictionary that contains session variables
+        """
         client = self._create_client(session)
         if client.registration_access_token is not None:
             return True
         return False
 
     def get_email(self, session):
+        """
+        Returns e-mail of authenticated user. If user is not authenticated or
+        server does not return e-mail as part of user data, returns None.
+        Data from user data is cached in session. If fresh data is required,
+        use clear_user_info before call to this function.
+        :arg session mutable dictionary that contains session variables
+        """
         response = self._request_user_info(session)
         if response is not None:
             resp_json = json.loads(response)
@@ -193,6 +215,13 @@ class MiraclClient(object):
         return None
 
     def get_user_id(self, session):
+        """
+        Returns user ID of authenticated user. If user is not authenticated or
+        server does not return user ID as part of user data, returns None.
+        Data from user data is cached in session. If fresh data is required,
+        use clear_user_info before call to this function.
+        :arg session mutable dictionary that contains session variables
+        """
         response = self._request_user_info(session)
         if response is not None:
             resp_json = json.loads(response)
