@@ -164,7 +164,7 @@ class MiraclClient(object):
         if SESSION_MIRACL_USERINFO_KEY in session:
             _logger.debug("user_info response: (from session) %s",
                           session[SESSION_MIRACL_USERINFO_KEY])
-            return session[SESSION_MIRACL_USERINFO_KEY]
+            return json.loads(session[SESSION_MIRACL_USERINFO_KEY])
 
         client = self._create_client(session)
 
@@ -192,9 +192,12 @@ class MiraclClient(object):
 
         text = response.text
         _logger.debug("user_info response: %s %s", response, text)
-
-        session[SESSION_MIRACL_USERINFO_KEY] = text
-        return text
+        try:
+            response = json.loads(text)
+        except ValueError as e:
+            raise MiraclError("Corrupted response", e)
+        session[SESSION_MIRACL_USERINFO_KEY] = response
+        return response
 
     def is_authorized(self, session):
         """
@@ -215,11 +218,8 @@ class MiraclClient(object):
         :arg session mutable dictionary that contains session variables
         """
         response = self._request_user_info(session)
-        if response is not None:
-            resp_json = json.loads(response)
-            if "sub" not in resp_json:
-                return None
-            return resp_json["sub"]
+        if response is not None and "sub" in response:
+            return response["sub"]
         return None
 
     def get_user_id(self, session):
@@ -231,11 +231,8 @@ class MiraclClient(object):
         :arg session mutable dictionary that contains session variables
         """
         response = self._request_user_info(session)
-        if response is not None:
-            resp_json = json.loads(response)
-            if "user_id" not in resp_json:
-                return None
-            return resp_json["user_id"]
+        if response is not None and "user_id" in response:
+            return response["user_id"]
         return None
 
 
