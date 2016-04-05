@@ -20,22 +20,40 @@ miracl = MiraclClient(
 @app.route("/")
 def hello():
     if not miracl.is_authorized(session):
-        return redirect("/auth")
+        return "<a href=\"/auth\">Login</a>"
     else:
-        return "Welcome, {0}".format(miracl.get_email(session))
+        email = miracl.get_email(session)
+        if email is None:
+            return redirect("/auth")
+        return ("Welcome, {0}.<br/>"
+                "<a href=\"/refresh\">Refresh data</a><br/>"
+                "<a href=\"/logout\">Log out</a>").format(email)
 
 
 @app.route("/c2id")
 def c2id():
     print(request.query_string)
-    if miracl.validate_authorization(session, request.query_string) is not None:
+    if miracl.validate_authorization(session,
+                                     request.query_string) is not None:
         return redirect("/")
-    return "Error"
+    return "Authorization problem. <a href=\"/\">Retry?</a>."
 
 
 @app.route("/auth")
 def auth():
     return redirect(miracl.get_authorization_request_url(session))
+
+
+@app.route("/refresh")
+def refresh():
+    miracl.clear_user_info(session)
+    return redirect("/")
+
+
+@app.route("/logout")
+def logout():
+    miracl.clear_user_info(session, including_auth=True)
+    return redirect("/")
 
 
 app.secret_key = "ReplaceWithValidSecret"
