@@ -17,6 +17,7 @@ _logger = logging.getLogger(__name__)
 SESSION_MIRACL_TOKEN_KEY = "miracl_token"
 SESSION_MIRACL_NONCE_KEY = "miracl_nonce"
 SESSION_MIRACL_STATE_KEY = "miracl_state"
+SESSION_MIRACL_USERINFO_KEY = "miracl_userinfo"
 
 
 class MiraclClient(object):
@@ -48,7 +49,7 @@ class MiraclClient(object):
 
         return client
 
-    def authorization_request(self, session):
+    def get_authorization_request_url(self, session):
         """ Returns redirect URL for authorization via M-Pin system
             :arg session mutable dictionary that contains session variables
         """
@@ -78,7 +79,7 @@ class MiraclClient(object):
 
         return request
 
-    def request_access_token(self, session, query_string):
+    def validate_authorization(self, session, query_string):
         """Returns code that can be used to request access token or None if
         query string doesn't contain code and state.
         """
@@ -124,9 +125,27 @@ class MiraclClient(object):
         else:
             return None
 
+    @staticmethod
+    def clear_user_info(session, including_auth=False):
+        keys = [SESSION_MIRACL_USERINFO_KEY]
+        if including_auth:
+            keys += [SESSION_MIRACL_NONCE_KEY,
+                     SESSION_MIRACL_STATE_KEY,
+                     SESSION_MIRACL_TOKEN_KEY]
+        for key in keys:
+            try:
+                del session[key]
+            except KeyError:
+                pass
+
     def _request_user_info(self, session):
         if SESSION_MIRACL_TOKEN_KEY not in session:
             return None
+
+        if SESSION_MIRACL_USERINFO_KEY in session:
+            _logger.debug("user_info response: (from session) %s",
+                          session[SESSION_MIRACL_USERINFO_KEY])
+            return session[SESSION_MIRACL_USERINFO_KEY]
 
         client = self._create_client(session)
 
@@ -149,21 +168,25 @@ class MiraclClient(object):
         except PyoidcError as e:
             raise MiraclError("User info request failed", e).log_exception()
 
-        _logger.debug("user_info response: %s %s", response, response.text)
+        if response.status_code not in SUCCESSFUL:
+            return None
 
-        return response
+        text = response.text
+        _logger.debug("user_info response: %s %s", response, text)
 
-    def check_token(self, session):
-        response = self._request_user_info(session)
-        if response is not None and response.status_code in SUCCESSFUL:
+        session[SESSION_MIRACL_USERINFO_KEY] = text
+        return text
+
+    def is_authorized(self, session):
+        client = self._create_client(session)
+        if client.registration_access_token is not None:
             return True
-
         return False
 
     def get_email(self, session):
         response = self._request_user_info(session)
-        if response is not None and response.status_code in SUCCESSFUL:
-            resp_json = json.loads(response.text)
+        if response is not None:
+            resp_json = json.loads(response)
             if "sub" not in resp_json:
                 return None
             return resp_json["sub"]
@@ -171,11 +194,11 @@ class MiraclClient(object):
 
     def get_user_id(self, session):
         response = self._request_user_info(session)
-        if response is not None and response.status_code in SUCCESSFUL:
-            resp_json = json.loads(response.text)
-            if "sub" not in resp_json:
+        if response is not None:
+            resp_json = json.loads(response)
+            if "user_id" not in resp_json:
                 return None
-            return resp_json["sub"]
+            return resp_json["user_id"]
         return None
 
 

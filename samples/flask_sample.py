@@ -19,7 +19,7 @@ m_pin = MiraclClient(
 
 @app.route("/")
 def hello():
-    if not m_pin.check_token(session):
+    if not m_pin.is_authorized(session):
         return redirect("/auth")
     else:
         return "Welcome, {0}".format(m_pin.get_email(session))
@@ -28,14 +28,14 @@ def hello():
 @app.route("/c2id")
 def c2id():
     print(request.query_string)
-    if m_pin.request_access_token(session, request.query_string) is not None:
+    if m_pin.validate_authorization(session, request.query_string) is not None:
         return redirect("/")
     return "Error"
 
 
 @app.route("/auth")
 def auth():
-    return redirect(m_pin.authorization_request(session))
+    return redirect(m_pin.get_authorization_request_url(session))
 
 
 app.secret_key = "ReplaceWithValidSecret"
