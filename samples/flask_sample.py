@@ -36,7 +36,7 @@ def c2id():
     if miracl.validate_authorization(session,
                                      request.query_string) is not None:
         return redirect("/")
-    return "Authorization problem. <a href=\"/\">Retry?</a>."
+    return "Authorization problem. <a href=\"/auth\">Retry?</a>"
 
 
 @app.route("/auth")
