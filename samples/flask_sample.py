@@ -11,7 +11,7 @@ logging.basicConfig(
 
 app = Flask(__name__)
 
-m_pin = MiraclClient(
+miracl = MiraclClient(
     client_id="CLIENT_ID",
     client_secret="CLIENT_SECRET",
     redirect_uri="REDIRECT_URI")
@@ -19,23 +19,23 @@ m_pin = MiraclClient(
 
 @app.route("/")
 def hello():
-    if not m_pin.is_authorized(session):
+    if not miracl.is_authorized(session):
         return redirect("/auth")
     else:
-        return "Welcome, {0}".format(m_pin.get_email(session))
+        return "Welcome, {0}".format(miracl.get_email(session))
 
 
 @app.route("/c2id")
 def c2id():
     print(request.query_string)
-    if m_pin.validate_authorization(session, request.query_string) is not None:
+    if miracl.validate_authorization(session, request.query_string) is not None:
         return redirect("/")
     return "Error"
 
 
 @app.route("/auth")
 def auth():
-    return redirect(m_pin.get_authorization_request_url(session))
+    return redirect(miracl.get_authorization_request_url(session))
 
 
 app.secret_key = "ReplaceWithValidSecret"
