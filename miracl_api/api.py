@@ -181,6 +181,8 @@ class MiraclClient(object):
 
 class MiraclError(Exception):
     def __init__(self, message, exception=None):
+        self.message = message
+        self.exception = exception
         if exception is None:
             Exception.__init__(self, message)
         else:
