@@ -193,11 +193,11 @@ class MiraclClient(object):
         text = response.text
         _logger.debug("user_info response: %s %s", response, text)
         try:
-            response = json.loads(text)
+            resp_json = json.loads(text)
+            session[SESSION_MIRACL_USERINFO_KEY] = text
+            return resp_json
         except ValueError as e:
             raise MiraclError("Corrupted response", e)
-        session[SESSION_MIRACL_USERINFO_KEY] = response
-        return response
 
     def is_authorized(self, session):
         """
