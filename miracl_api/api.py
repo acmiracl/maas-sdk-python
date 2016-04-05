@@ -21,9 +21,11 @@ SESSION_MIRACL_USERINFO_KEY = "miracl_userinfo"
 
 
 class MiraclClient(object):
-    def __init__(self, client_id, client_secret, redirect_uri):
+    def __init__(self, client_id, client_secret, redirect_uri,
+                 allow_empty_state=True):
         super(MiraclClient, self).__init__()
 
+        self.allow_empty_state = allow_empty_state
         client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
 
         self.provider_info = client.provider_config(issuer=_issuer)
@@ -51,7 +53,6 @@ class MiraclClient(object):
                 session[SESSION_MIRACL_TOKEN_KEY])
 
             client.registration_access_token = access_token
-
 
         return client
 
@@ -106,6 +107,11 @@ class MiraclClient(object):
         if "state" in response:
             if response["state"] != session[SESSION_MIRACL_STATE_KEY]:
                 raise MiraclError("Session state differs from response state")
+        else:
+            if not self.allow_empty_state:
+                raise MiraclError("Query string does not have state")
+            # Workaround for stateless request from Miracl system
+            session[SESSION_MIRACL_STATE_KEY] = ""
 
         args = {
             "redirect_uri": client.registration_response["redirect_uris"][0],
