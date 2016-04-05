@@ -1,5 +1,5 @@
 import unittest
-import test_miracl_api
+from . import test_miracl_api
 
 
 def test_suite():
