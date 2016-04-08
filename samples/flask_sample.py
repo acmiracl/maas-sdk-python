@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from flask import Flask, redirect, session, request
+from flask import Flask, redirect, session, request, render_template, flash
 from miracl_api import MiraclClient
 
 import logging
@@ -19,15 +19,15 @@ miracl = MiraclClient(
 
 @app.route("/")
 def hello():
-    if not miracl.is_authorized(session):
-        return "<a href=\"/auth\">Login</a>"
-    else:
-        email = miracl.get_email(session)
-        if email is None:
-            return redirect("/auth")
-        return ("Welcome, {0}.<br/>"
-                "<a href=\"/refresh\">Refresh data</a><br/>"
-                "<a href=\"/logout\">Log out</a>").format(email)
+    context = {
+        'is_authorized': miracl.is_authorized(session)
+    }
+
+    if miracl.is_authorized(session):
+        context['email'] = miracl.get_email(session)
+        context['user_id'] = miracl.get_user_id(session)
+
+    return render_template('index.html', **context)
 
 
 @app.route("/c2id")
@@ -35,8 +35,13 @@ def c2id():
     print(request.query_string)
     if miracl.validate_authorization(session,
                                      request.query_string) is not None:
+        flash('Successfully logged in!', 'success')
+
         return redirect("/")
-    return "Authorization problem. <a href=\"/auth\">Retry?</a>"
+
+    flash('Login failed!', 'danger')
+
+    return render_template('index.html', retry=True)
 
 
 @app.route("/auth")
