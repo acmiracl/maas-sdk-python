@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import unicode_literals
 
 from flask import Flask, redirect, session, request, render_template, flash
 from miracl_api import MiraclClient
@@ -34,7 +34,7 @@ def hello():
 def c2id():
     print(request.query_string)
     if miracl.validate_authorization(session,
-                                     request.query_string) is not None:
+                                     request.query_string.decode()) is not None:
         flash('Successfully logged in!', 'success')
 
         return redirect("/")
