@@ -66,6 +66,10 @@ class MiraclClient(object):
 
         client = self._create_client(session)
 
+        # Regenerate state and nonce on each auth url request
+        session[SESSION_MIRACL_STATE_KEY] = rndstr()
+        session[SESSION_MIRACL_NONCE_KEY] = rndstr()
+
         args = {
             "client_id": client.client_id,
             "response_type": "code",
