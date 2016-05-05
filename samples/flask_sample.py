@@ -26,7 +26,8 @@ def hello():
     if miracl.is_authorized(session):
         context['email'] = miracl.get_email(session)
         context['user_id'] = miracl.get_user_id(session)
-
+    else:
+        context['auth_url'] = miracl.get_authorization_request_url(session)
     return render_template('index.html', **context)
 
 
@@ -41,12 +42,9 @@ def c2id():
 
     flash('Login failed!', 'danger')
 
-    return render_template('index.html', retry=True)
-
-
-@app.route("/auth")
-def auth():
-    return redirect(miracl.get_authorization_request_url(session))
+    return render_template('index.html', retry=True,
+                           auth_url=miracl.get_authorization_request_url(
+                               session))
 
 
 @app.route("/refresh")

@@ -29,6 +29,8 @@
             margin-bottom: 15px;
         }
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    <script src="http://mpinaas-demo.miracl.net:8002/mpin/mpin.js"></script>
 </head>
 <body>
 <div class="container">
@@ -53,11 +55,11 @@
     </div>
 
     {% if retry %}
-        <div class="row">
-            <div class="col-md-12">
-                <a href="/auth" class="btn btn-primary">Retry?</a>
-            </div>
+        {% if auth_url %}
+        <div class="col-md-12">
+            <a href="#" class="btn btn-primary" onClick="mpin.login({authURL: '{{ auth_url }}'})">Retry?</a>
         </div>
+        {% endif %}
     {% endif %}
 
     {% if not retry %}
@@ -73,9 +75,11 @@
                     <a href="/logout" class="btn btn-primary action">Log out</a>
                 </div>
             {% else %}
+                {% if auth_url %}
                 <div class="col-md-12">
-                    <a href="/auth" class="btn btn-primary">Login</a>
+                    <a href="#" class="btn btn-primary" onClick="mpin.login({authURL: '{{ auth_url }}'})">Login</a>
                 </div>
+                {% endif %}
             {% endif %}
         </div>
     {% endif %}
