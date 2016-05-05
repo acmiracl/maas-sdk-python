@@ -13,7 +13,7 @@ setup(name='miracl_api',
           'future'  # https://github.com/rohe/pyoidc/issues/188
       ],
       tests_require=[
-          'mock==1.3.0',
+          'mock==2.0.0',
       ],
       test_suite='tests.test_suite',
       zip_safe=False)
