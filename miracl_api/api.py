@@ -73,7 +73,7 @@ class MiraclClient(object):
         args = {
             "client_id": client.client_id,
             "response_type": "code",
-            "scope": ['openid', 'email', 'user_id', 'name'],
+            "scope": ['openid', 'email', 'sub', 'name'],
             "nonce": session[SESSION_MIRACL_NONCE_KEY],
             "redirect_uri": client.registration_response["redirect_uris"][0],
             "state": session[SESSION_MIRACL_STATE_KEY]
@@ -126,7 +126,7 @@ class MiraclClient(object):
         _logger.debug("request_access_token: %s", args)
         try:
             resp = client.do_access_token_request(
-                scope=['openid', 'email', 'user_id', 'name'],
+                scope=['openid', 'email', 'sub', 'name'],
                 state=session[SESSION_MIRACL_STATE_KEY],
                 request_args=args,
                 authn_method="client_secret_basic"
