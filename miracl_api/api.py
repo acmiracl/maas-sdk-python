@@ -229,8 +229,8 @@ class MiraclClient(object):
         :arg session mutable dictionary that contains session variables
         """
         response = self._request_user_info(session)
-        if response is not None and "sub" in response:
-            return response["sub"]
+        if response is not None and "email" in response:
+            return response["email"]
         return None
 
     def get_user_id(self, session):
@@ -242,8 +242,8 @@ class MiraclClient(object):
         :arg session mutable dictionary that contains session variables
         """
         response = self._request_user_info(session)
-        if response is not None and "user_id" in response:
-            return response["user_id"]
+        if response is not None and "sub" in response:
+            return response["sub"]
         return None
 
 
