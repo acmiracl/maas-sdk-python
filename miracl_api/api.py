@@ -187,7 +187,14 @@ class MiraclClient(object):
 
         _logger.debug("user_info request: %s", request)
         try:
-            response = client.http_request(url=request, method='GET')
+            response = client.http_request(
+                url=request,
+                method='GET',
+                headers={
+                    "Authorization": "Bearer " +
+                                     client.registration_access_token[
+                                         "access_token"]
+                })
         except PyoidcError as e:
             raise MiraclError("User info request failed", e).log_exception()
 
