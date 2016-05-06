@@ -9,7 +9,7 @@ setup(name='miracl_api',
       license='TBD',
       packages=['miracl_api'],
       install_requires=[
-          'flask', 'oic',
+          'flask', 'oic==0.8.4.0',
           'future'  # https://github.com/rohe/pyoidc/issues/188
       ],
       tests_require=[
