@@ -56,6 +56,7 @@ def refresh():
 @app.route("/logout")
 def logout():
     miracl.clear_user_info(session, including_auth=True)
+    flash('User logged out!', 'info')
     return redirect("/")
 
 
