@@ -10,7 +10,7 @@ from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from oic.oauth2 import SUCCESSFUL
 import logging
 
-_issuer = "http://mpinaas-demo.miracl.net:8001"
+_issuer = "https://api.dev.miracl.net/"
 
 _logger = logging.getLogger(__name__)
 

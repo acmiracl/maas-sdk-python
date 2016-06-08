@@ -67,18 +67,19 @@ authorization status.
 
 ### Authorization flow
 
-Authorization flow depends on `mpin.js` browser library. `mpin.js` depends on
-`jquery`.To use it, load it in `<head>` element of page responsible for login:
+Authorization flow depends on `mpad.js` browser library. To show login button:
+
+* Put div with distinct ID where login button should be
+* Create authorization URL by using
+`client.get_authorization_request_url(session)`
+* At the end of page body load `mpad.js` with parameters `x-authurl`
+(authorization URL) and `x-element` (login button ID)
 
 ```
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
-    <script src="http://mpinaas-demo.miracl.net:8002/mpin/mpin.js"></script>
+<script src="https://demo.dev.miracl.net/mpin/mpad.js" x-authurl="{{ auth_url }}" x-element="btmpin"></script>
 ```
 
-If user is not authorized, use `client.get_authorization_request_url(session)`
-to get authorization request URL and set client internal state. Returned URL
-should be used with `mpin.js` login function
-`mpin.login({authURL: "< auth-url >"})`. After user
+After user
 interaction with Miracl system  user will be sent to `redirect_uri` defined at
 creation of `MiraclClient` object.
 
