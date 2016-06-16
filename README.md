@@ -51,6 +51,8 @@ application). `REDIRECT_URI` is URI of your application end-point that will be
 responsible obtaining token. It should be the same as registered in Miracl
 system for this client ID.
 
+It is possible to override default issuer with `issuer` parameter.
+
 ### Status check and user data
 
 To check if user session has token use `client.is_authorized(session)`. You can

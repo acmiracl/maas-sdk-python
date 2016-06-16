@@ -22,13 +22,14 @@ SESSION_MIRACL_USERINFO_KEY = "miracl_userinfo"
 
 class MiraclClient(object):
     def __init__(self, client_id, client_secret, redirect_uri,
-                 allow_empty_state=True):
+                 allow_empty_state=True, issuer=_issuer):
         super(MiraclClient, self).__init__()
 
+        self.issuer = issuer
         self.allow_empty_state = allow_empty_state
         client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
 
-        self.provider_info = client.provider_config(issuer=_issuer)
+        self.provider_info = client.provider_config(issuer=self.issuer)
 
         _logger.info("Received provider info: %s", self.provider_info)
 
@@ -44,7 +45,7 @@ class MiraclClient(object):
             session[SESSION_MIRACL_NONCE_KEY] = rndstr()
 
         client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
-        client.handle_provider_config(self.provider_info, issuer=_issuer)
+        client.handle_provider_config(self.provider_info, issuer=self.issuer)
         client_reg = RegistrationResponse(**self.info)
         client.store_registration_info(client_reg)
 
