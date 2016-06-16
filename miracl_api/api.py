@@ -21,7 +21,7 @@ SESSION_MIRACL_USERINFO_KEY = "miracl_userinfo"
 
 
 class MiraclClient(object):
-    def __init__(self, client_id, client_secret, redirect_uri,
+    def __init__(self, client_id, secret, redirect_uri,
                  allow_empty_state=True, issuer=_issuer):
         super(MiraclClient, self).__init__()
 
@@ -34,7 +34,7 @@ class MiraclClient(object):
         _logger.info("Received provider info: %s", self.provider_info)
 
         self.info = {"client_id": client_id,
-                     "client_secret": client_secret,
+                     "client_secret": secret,
                      "redirect_uris": [redirect_uri]
                      }
 

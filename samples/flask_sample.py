@@ -4,17 +4,23 @@ from flask import Flask, redirect, session, request, render_template, flash
 from miracl_api import MiraclClient
 
 import logging
+import json
 
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s: %(message)s')
 
+
+def read_configuration():
+    config_file = open("miracl.json")
+    config = json.load(config_file)
+    config_file.close()
+    return config
+
+
 app = Flask(__name__)
 
-miracl = MiraclClient(
-    client_id="CLIENT_ID",
-    client_secret="CLIENT_SECRET",
-    redirect_uri="REDIRECT_URI")
+miracl = MiraclClient(**read_configuration())
 
 
 @app.route("/")
@@ -64,4 +70,4 @@ app.secret_key = "ReplaceWithValidSecret"
 
 if __name__ == "__main__":
     app.debug = True
-    app.run()
+    app.run(port=5000)

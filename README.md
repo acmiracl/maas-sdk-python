@@ -42,11 +42,11 @@ threads and is thread-safe.
 ```
 client = MiraclClient(
     client_id="CLIENT_ID",
-    client_secret="CLIENT_SECRET",
+    secret="SECRET",
     redirect_uri="REDIRECT_URI")
 ```
 
-`CLIENT_ID` and `CLIENT_SECRET` can be obtained from Miracl(unique per
+`CLIENT_ID` and `SECRET` can be obtained from Miracl(unique per
 application). `REDIRECT_URI` is URI of your application end-point that will be
 responsible obtaining token. It should be the same as registered in Miracl
 system for this client ID.
@@ -118,8 +118,12 @@ Log levels used:
 
 ## Samples
 
-Replace `CLIENT_ID`, `CLIENT_SECRET` and `REDIRECT_URI` with valid data from
-https://m-pin.my.id/protected . Samples can be run after setup step is done.
+Configuration is located in `miracl.json`.
+
+Replace `CLIENT_ID`, `SECRET` and `REDIRECT_URI` with valid data from
+Miracl. Samples can be run after setup step is done.
+
+Redirect URI for this sample is `http://127.0.0.1:5000/c2id` if run locally.
 
 ### Flask
 
