@@ -9,8 +9,9 @@ from oic.oic.message import RegistrationResponse, AuthorizationResponse, \
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from oic.oauth2 import SUCCESSFUL
 import logging
+from .config import config
 
-_issuer = "https://api.dev.miracl.net/"
+_issuer = config["ISSUER"]
 
 _logger = logging.getLogger(__name__)
 
