@@ -1,3 +1,3 @@
 config = {
-    "ISSUER": "https://api.dev.miracl.net/"
+    "ISSUER": "https://api.stg.miracl.net/"
 }
