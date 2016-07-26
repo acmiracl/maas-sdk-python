@@ -1,0 +1,18 @@
+MIRACL_LOG_RECEIVED_PROVIDER_INFO = "Received provider info: %s"
+MIRACL_LOG_AUTHORIZATION_REQUEST = "authorization_request: %s"
+MIRACL_LOG_AUTHORIZATION_REQUEST_URL = "authorization_request url: %s"
+MIRACL_LOG_REQUEST_ACCESS_TOKEN = "request_access_token: %s"
+MIRACL_LOG_REQUEST_TOKEN_RESPONSE = "request_access_token response: %s"
+MIRACL_LOG_USER_INFO_RESPONSE_SESSION = "user_info response: (from session) %s"
+MIRACL_LOG_USER_INFO_REQUEST = "user_info request: %s"
+MIRACL_LOG_USER_INFO_RESPONSE = "user_info response: %s %s"
+
+MIRACL_MSG_QUERY_STRING_PARSE_FAILED = "Query string parse failed"
+MIRACL_MSG_STATE_DIFFERS = "Session state differs from response state"
+MIRACL_MSG_QUERY_STRING_NO_STATE = "Query string does not have state"
+MIRACL_MSG_ACCESS_TOKEN_REQUEST_FAILED = "Access token request failed"
+MIRACL_MSG_USER_INFO_REQUEST_FAILED = "User info request failed"
+MIRACL_MSG_CORRUPTED_RESPONSE = "Corrupted response"
+
+MIRACL_MSG_EXCEPTION_NESTED = "{0}, original exception: {1}"
+MIRACL_MSG_EXCEPTION_LOGGED = "Exception logged: {0}"
