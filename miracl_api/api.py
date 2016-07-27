@@ -10,6 +10,7 @@ from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from oic.oauth2 import SUCCESSFUL
 import logging
 from .config import config
+from .messages import *
 
 _issuer = config["ISSUER"]
 
@@ -32,7 +33,7 @@ class MiraclClient(object):
 
         self.provider_info = client.provider_config(issuer=self.issuer)
 
-        _logger.info("Received provider info: %s", self.provider_info)
+        _logger.info(MIRACL_LOG_RECEIVED_PROVIDER_INFO, self.provider_info)
 
         self.info = {"client_id": client_id,
                      "client_secret": secret,
@@ -81,12 +82,12 @@ class MiraclClient(object):
             "state": session[SESSION_MIRACL_STATE_KEY]
         }
 
-        _logger.debug("authorization_request: %s", args)
+        _logger.debug(MIRACL_LOG_AUTHORIZATION_REQUEST, args)
 
         auth_req = client.construct_AuthorizationRequest(request_args=args)
         request = auth_req.request(client.authorization_endpoint)
 
-        _logger.debug("authorization_request url: %s", request)
+        _logger.debug(MIRACL_LOG_AUTHORIZATION_REQUEST_URL, request)
 
         return request
 
@@ -108,14 +109,16 @@ class MiraclClient(object):
                                              info=query_string,
                                              sformat="urlencoded")
         except PyoidcError as e:
-            raise MiraclError("Query string parse failed", e).log_exception()
+            raise MiraclError(
+                MIRACL_MSG_QUERY_STRING_PARSE_FAILED, e).log_exception()
 
         if "state" in response:
             if response["state"] != session[SESSION_MIRACL_STATE_KEY]:
-                raise MiraclError("Session state differs from response state")
+                raise MiraclError(
+                    MIRACL_MSG_STATE_DIFFERS)
         else:
             if not self.allow_empty_state:
-                raise MiraclError("Query string does not have state")
+                raise MiraclError(MIRACL_MSG_QUERY_STRING_NO_STATE)
             # Workaround for stateless request from Miracl system
             session[SESSION_MIRACL_STATE_KEY] = ""
 
@@ -125,7 +128,7 @@ class MiraclClient(object):
             "client_secret": client.client_secret
         }
 
-        _logger.debug("request_access_token: %s", args)
+        _logger.debug(MIRACL_LOG_REQUEST_ACCESS_TOKEN, args)
         try:
             resp = client.do_access_token_request(
                 scope=['openid', 'email', 'sub', 'name'],
@@ -134,10 +137,11 @@ class MiraclClient(object):
                 authn_method="client_secret_basic"
             )
         except PyoidcError as e:
-            raise MiraclError("Access token request failed", e).log_exception()
+            raise MiraclError(
+                MIRACL_MSG_ACCESS_TOKEN_REQUEST_FAILED, e).log_exception()
 
         resp_dict = resp.to_dict()
-        _logger.debug("request_access_token response: %s", resp_dict)
+        _logger.debug(MIRACL_LOG_REQUEST_TOKEN_RESPONSE, resp_dict)
 
         if "access_token" in resp_dict:
             session[SESSION_MIRACL_TOKEN_KEY] = resp_dict
@@ -168,7 +172,7 @@ class MiraclClient(object):
             return None
 
         if SESSION_MIRACL_USERINFO_KEY in session:
-            _logger.debug("user_info response: (from session) %s",
+            _logger.debug(MIRACL_LOG_USER_INFO_RESPONSE_SESSION,
                           session[SESSION_MIRACL_USERINFO_KEY])
             return json.loads(session[SESSION_MIRACL_USERINFO_KEY])
 
@@ -187,7 +191,7 @@ class MiraclClient(object):
             }
         ).request(client.userinfo_endpoint)
 
-        _logger.debug("user_info request: %s", request)
+        _logger.debug(MIRACL_LOG_USER_INFO_REQUEST, request)
         try:
             response = client.http_request(
                 url=request,
@@ -198,19 +202,20 @@ class MiraclClient(object):
                                          "access_token"]
                 })
         except PyoidcError as e:
-            raise MiraclError("User info request failed", e).log_exception()
+            raise MiraclError(
+                MIRACL_MSG_USER_INFO_REQUEST_FAILED, e).log_exception()
 
         if response.status_code not in SUCCESSFUL:
             return None
 
         text = response.text
-        _logger.debug("user_info response: %s %s", response, text)
+        _logger.debug(MIRACL_LOG_USER_INFO_RESPONSE, response, text)
         try:
             resp_json = json.loads(text)
             session[SESSION_MIRACL_USERINFO_KEY] = text
             return resp_json
         except ValueError as e:
-            raise MiraclError("Corrupted response", e)
+            raise MiraclError(MIRACL_MSG_CORRUPTED_RESPONSE, e)
 
     def is_authorized(self, session):
         """
@@ -258,8 +263,8 @@ class MiraclError(Exception):
         else:
             Exception.__init__(
                 self,
-                "{0}, original exception: {1}".format(message, exception))
+                MIRACL_MSG_EXCEPTION_NESTED.format(message, exception))
 
     def log_exception(self):
-        _logger.error("Exception logged: {0}".format(self.message))
+        _logger.error(MIRACL_MSG_EXCEPTION_LOGGED.format(self.message))
         return self
