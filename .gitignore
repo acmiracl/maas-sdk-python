@@ -11,3 +11,4 @@
 # Other files
 .cache/
 .eggs/
+.tox
