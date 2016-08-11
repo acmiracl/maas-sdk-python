@@ -2,7 +2,21 @@ sudo: false
 language: python
 
 install:
-    - pip install tox
+  - |
+    if [[ $TRAVIS_OS_NAME == "osx" ]]
+    then
+      brew update || brew update # try again if it fails
+      brew upgrade
+      brew reinstall pyenv
+      eval "$(pyenv init -)"
+      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.5.2
+      pyenv global 3.5.2
+      pyenv shell 3.5.2
+      pip install -U pip setuptools wheel virtualenv
+    fi
+  - pip install tox
+
+
 
 matrix:
   fast_finish: true
@@ -11,10 +25,6 @@ matrix:
       osx_image: xcode7.3
       language: generic
       env: TOXENV=py35
-    - os: osx
-      osx_image: xcode7.3
-      language: generic
-      env: TOXENV=py27
     - python: 3.5
       env: TOXENV=py35
     - python: 2.7
@@ -23,4 +33,4 @@ matrix:
     - python: pypy
 
 script:
-    - tox
+    - python -m tox
